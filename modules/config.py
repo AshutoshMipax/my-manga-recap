@@ -38,6 +38,10 @@ LOCAL_LLM_MODEL_ID = os.getenv("LOCAL_LLM_MODEL_ID", "NousResearch/Hermes-2-Pro-
 LOCAL_LLM_PROMPT_FORMAT = os.getenv("LOCAL_LLM_PROMPT_FORMAT", "chatml") # Options: "chatml", "llama2", "alpaca", "generic"
 LOCAL_LLM_QUANTIZATION = os.getenv("LOCAL_LLM_QUANTIZATION", None) # Options: "4bit", "8bit", or None
 
+# Preferred AI Provider for script generation (text-to-text)
+# Options: "local", "openai", "silent". If None or invalid, AIManager defaults to "local" > "openai" > "silent".
+PREFERRED_AI_PROVIDER = os.getenv("PREFERRED_AI_PROVIDER", "local")
+
 
 # Configuration validation and info
 def get_openai_config():
