@@ -14,13 +14,13 @@ set REQUIREMENTS_FILE=requirements.txt
 
 REM --- Helper Functions ---
 :check_command
-    echo Checking for %1...
-    where %1 >nul 2>nul
+    echo Checking for %~1...
+    where %~1 >nul 2>nul
     if %errorlevel% neq 0 (
-        echo   %1 not found. Please install it and add to PATH.
+        echo   %~1 not found. Please install it and add to PATH.
         exit /b 1
     )
-    echo   %1 found.
+    echo   %~1 found.
     exit /b 0
 
 REM --- 1. Check for Python ---
