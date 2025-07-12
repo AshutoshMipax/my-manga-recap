@@ -1,198 +1,158 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
-REM Project Title
+REM =======================================
+REM  My Manga Recap - Local Model Setup
+REM =======================================
+echo.
 echo =======================================
 echo  My Manga Recap - Local Model Setup
 echo =======================================
 echo.
 
 REM --- Configuration ---
-set PYTHON_VERSION=3.9
-set VENV_NAME=.venv
-set REQUIREMENTS_FILE=requirements.txt
+set "PYTHON_VERSION=3.9"
+set "VENV_NAME=.venv"
+set "REQUIREMENTS_FILE=requirements.txt"
 
-REM --- 1. Check for Python ---
-echo Checking for python...
+REM =======================================
+REM  1. Check for Python
+REM =======================================
+echo --- Stage: Checking for Python ---
 where python >nul 2>nul
 if %errorlevel% neq 0 (
-    echo   python not found. Please install it and add to PATH.
-    echo Python is required to run this application.
-    echo Please install Python %PYTHON_VERSION% or higher and ensure it's in your PATH.
-    goto :eof
+    echo ERROR: python.exe not found in your system's PATH.
+    echo Please install Python %PYTHON_VERSION% or higher and ensure it's added to your PATH during installation.
+    pause
+    goto :error_exit
 )
-echo   python found.
+echo Python found.
 echo.
 
-REM --- (No more :check_command subroutine) ---
-
-REM --- 2. Create/Activate Virtual Environment ---
-echo.
+REM =======================================
+REM  2. Create and Activate Virtual Environment
+REM =======================================
 echo --- Stage: Virtual Environment Setup ---
-PAUSE
-
-echo Current directory: %CD%
-PAUSE
-
-echo Checking if venv directory '%VENV_NAME%' exists...
-IF EXIST %VENV_NAME% (
-    echo Venv directory '%VENV_NAME%' already exists.
-) ELSE (
-    echo Venv directory '%VENV_NAME%' does not exist. Will attempt to create.
+REM Check if the activate script exists. If not, create the venv.
+if not exist "%VENV_NAME%\Scripts\activate.bat" (
+    echo Virtual environment not found. Creating it now in "%VENV_NAME%"...
+    python -m venv "%VENV_NAME%"
+    if !errorlevel! neq 0 (
+        echo ERROR: Failed to create the virtual environment.
+        echo Please check your Python installation (e.g., ensure the 'venv' module is available) and directory permissions.
+        pause
+        goto :error_exit
+    )
+    echo Virtual environment created successfully.
+) else (
+    echo Virtual environment already exists.
 )
-PAUSE
 
-echo Attempting to create Python virtual environment: '%VENV_NAME%'
-python -m venv %VENV_NAME%
-IF %ERRORLEVEL% NEQ 0 (
-    echo ERROR: Failed to create virtual environment using 'python -m venv %VENV_NAME%'.
-    echo Possible issues:
-    echo   - Python's venv module is missing or corrupted.
-    echo   - Permissions issue in the current directory (%CD%).
-    echo   - Insufficient disk space.
-    echo Please check your Python installation and directory permissions.
-    PAUSE
-    GOTO :error_exit
+echo Activating virtual environment...
+call "%VENV_NAME%\Scripts\activate.bat"
+if !errorlevel! neq 0 (
+    echo ERROR: Failed to activate the virtual environment.
+    pause
+    goto :error_exit
 )
-ECHO Virtual environment should now be created or was already present.
-PAUSE
-
-echo Checking for activate script: '%VENV_NAME%\\Scripts\\activate.bat'
-IF NOT EXIST %VENV_NAME%\\Scripts\\activate.bat (
-    echo ERROR: Activate script not found at '%VENV_NAME%\\Scripts\\activate.bat' even after creation attempt.
-    echo This indicates a problem with the venv creation process.
-    PAUSE
-    GOTO :error_exit
-)
-ECHO Activate script found.
-PAUSE
-
-echo Attempting to activate virtual environment...
-CALL %VENV_NAME%\\Scripts\\activate.bat
-IF %ERRORLEVEL% NEQ 0 (
-    echo ERROR: Failed to activate virtual environment using CALL.
-    echo The activate script might have issues or the path is incorrect.
-    PAUSE
-    GOTO :error_exit
-)
-ECHO Virtual environment activated.
+echo Virtual environment is active.
 echo.
-PAUSE
+pause
 
-REM --- 3. Install Dependencies ---
+REM =======================================
+REM  3. Install Dependencies
+REM =======================================
+echo --- Stage: Installing Dependencies ---
 echo Installing dependencies from %REQUIREMENTS_FILE%...
-pip install -r %REQUIREMENTS_FILE%
-if %errorlevel% neq 0 (
-    echo Failed to install dependencies from %REQUIREMENTS_FILE%.
+pip install -r "%REQUIREMENTS_FILE%"
+if !errorlevel! neq 0 (
+    echo ERROR: Failed to install dependencies from %REQUIREMENTS_FILE%.
+    pause
     goto :error_exit
 )
 echo Dependencies from %REQUIREMENTS_FILE% installed successfully.
 echo.
 
 echo Installing additional dependencies for local AI models...
-REM - torch, torchvision, torchaudio: Often best installed separately with specific CUDA version if needed.
-REM   The versions in requirements.txt might be CPU-only or a generic CUDA.
-REM   For optimal performance with GPUs, users might need to install PyTorch from https://pytorch.org/get-started/locally/
-echo   Note: For GPU support with PyTorch, you might need to install a CUDA-specific version.
-echo   See https://pytorch.org/ for instructions. The 'torch' in requirements.txt might be CPU-only.
+echo Note: For optimal GPU support, you might need to install a CUDA-specific version of PyTorch first.
+echo See https://pytorch.org/get-started/locally/ for instructions.
 pip install bitsandbytes accelerate sentencepiece protobuf
-REM sentencepiece is often a dependency for tokenizers
-REM protobuf is sometimes needed by transformers or underlying libraries
-if %errorlevel% neq 0 (
-    echo Failed to install additional AI model dependencies.
+if !errorlevel! neq 0 (
+    echo ERROR: Failed to install additional AI model dependencies (bitsandbytes, accelerate, etc.).
+    pause
     goto :error_exit
 )
 echo Additional AI model dependencies installed successfully.
 echo.
+pause
 
-REM --- 4. Tesseract OCR (if not installed) ---
-echo Checking for tesseract...
+REM =======================================
+REM  4. Check for Tesseract OCR
+REM =======================================
+echo --- Stage: Checking for Tesseract OCR ---
 where tesseract >nul 2>nul
 if %errorlevel% neq 0 (
-    echo   tesseract not found.
+    echo.
     echo ======================================================================
-    echo  WARNING: Tesseract OCR not found in PATH.
+    echo  WARNING: Tesseract OCR not found in your system's PATH.
     echo ======================================================================
-    echo  Tesseract is used as a fallback OCR engine.
-    echo  If you haven't installed it, please download and install it from:
-    echo    https://github.com/UB-Mannheim/tesseract/wiki
-    echo  During installation, make sure to:
-    echo    1. Add Tesseract to your system PATH.
-    echo    2. Install the language data for English ("eng") and Portuguese ("por").
-    echo  After installation, you might need to restart this script or your terminal.
+    echo  Tesseract is used as a fallback OCR engine if local/cloud AI providers fail.
+    echo  To install it:
+    echo    1. Download from: https://github.com/UB-Mannheim/tesseract/wiki
+    echo    2. IMPORTANT: During installation, ensure you check the box to "Add Tesseract to your system PATH".
+    echo    3. Also, add the language data for English ("eng") and Portuguese ("por").
     echo ======================================================================
     echo.
 ) else (
-    echo   tesseract found.
+    echo Tesseract OCR found.
 )
 echo.
+pause
 
-REM --- 5. Model Downloading (Instructions/Placeholders) ---
+REM =======================================
+REM  5. Final Configuration Reminder
+REM =======================================
+echo.
 echo ======================================================================
-echo  ACTION REQUIRED: Download Local AI Models
+echo  ACTION REQUIRED: Configure Your Models
 echo ======================================================================
-echo  This script does not automatically download the large AI model files.
-echo  You need to download them manually and update 'modules/config.py'.
+echo  The final step is to tell the program which AI models to use.
+echo  Open the file at:
 echo.
-echo  Instructions:
-echo  1. LLaVA Model (for Vision/OCR):
-echo     - Recommended model: e.g., 'bakLLaVA-1' (llava-hf/bakLlava-v1-hf) or other LLaVA 1.5/Next variants.
-echo     - Download from Hugging Face Hub: https://huggingface.co/models?search=llava
-echo     - Update 'LLAVA_MODEL_ID' in 'modules/config.py' to the path of your downloaded model
-echo       or its Hugging Face identifier (e.g., "llava-hf/bakLlava-v1-hf").
-echo     - You can also set 'LLAVA_QUANTIZATION = "4bit"' or '"8bit"' in config.py for smaller memory footprint (requires bitsandbytes).
+echo    modules\config.py
 echo.
-echo  2. LLaMA-style LLM (for Text Generation):
-echo     - Recommended models: e.g., Llama-2-7b-chat-hf, Mistral-7B-Instruct-v0.1, etc.
-echo     - Download from Hugging Face Hub: https://huggingface.co/models
-echo     - Update 'LOCAL_LLM_MODEL_ID' in 'modules/config.py' to the path of your downloaded model
-echo       or its Hugging Face identifier (e.g., "meta-llama/Llama-2-7b-chat-hf").
-echo     - Update 'LOCAL_LLM_PROMPT_FORMAT' in 'modules/config.py' (e.g., "llama2", "chatml", "alpaca").
-echo     - You can also set 'LOCAL_LLM_QUANTIZATION = "4bit"' or '"8bit"' in config.py.
+echo  And edit the following variables with either a Hugging Face model ID
+echo  (which will be downloaded automatically) or a path to a local model
+echo  you've already downloaded.
 echo.
-echo  Example for config.py:
-echo  ----------------------------------------------------------------------
-echo  # modules/config.py
-echo  # ... other settings ...
-echo  LLAVA_MODEL_ID = "llava-hf/bakLlava-v1-hf"  # Or path like "C:/models/bakLlava-v1-hf"
-echo  LLAVA_QUANTIZATION = "4bit"  # Options: "4bit", "8bit", or None
+echo  --- For Local Vision/OCR ---
+echo  LLAVA_MODEL_ID = "llava-hf/llava-1.5-7b-hf"
+echo  LLAVA_QUANTIZATION = "4bit"
 echo.
-echo  LOCAL_LLM_MODEL_ID = "meta-llama/Llama-2-7b-chat-hf" # Or path
-echo  LOCAL_LLM_PROMPT_FORMAT = "llama2" # or "chatml", "alpaca", "generic"
-echo  LOCAL_LLM_QUANTIZATION = "4bit" # Options: "4bit", "8bit", or None
-echo  # ... other settings ...
-echo  ----------------------------------------------------------------------
+echo  --- For Local Text Generation ---
+echo  LOCAL_LLM_MODEL_ID = "NousResearch/Hermes-2-Pro-Llama-3-8B"
+echo  LOCAL_LLM_PROMPT_FORMAT = "chatml"
+echo  LOCAL_LLM_QUANTIZATION = "4bit"
 echo.
-echo  IMPORTANT: Ensure the paths in config.py are correct if you download models locally.
-echo  If using Hugging Face identifiers, an internet connection will be needed
-echo  the first time the models are run to download them to the Hugging Face cache.
-echo  Default cache location is usually C:/Users/YourUser/.cache/huggingface/hub
+echo  --- Preferred Provider ---
+echo  PREFERRED_AI_PROVIDER = "local"
+echo.
+echo  You can also set QUANTIZATION to "8bit" or None (no quantization).
+echo  If you want to use OpenAI, set PREFERRED_AI_PROVIDER = "openai"
+echo  and make sure your OPENAI_API_KEY is set in 'modules/config.py' or an '.env' file.
 echo ======================================================================
 echo.
 pause
 
-REM --- 6. Update config.py (Reminder) ---
-echo ======================================================================
-echo  REMINDER: Ensure 'modules/config.py' is correctly set up!
-echo ======================================================================
-echo  - Set 'OPENAI_API_KEY' if you plan to use OpenAI providers.
-echo  - Verify 'LLAVA_MODEL_ID', 'LLAVA_QUANTIZATION'.
-echo  - Verify 'LOCAL_LLM_MODEL_ID', 'LOCAL_LLM_PROMPT_FORMAT', 'LOCAL_LLM_QUANTIZATION'.
-echo  - Check 'DEFAULT_LANG' and other settings.
-echo.
-echo  The application will attempt to use local models if the respective
-echo  '..._MODEL_ID' variables are set in 'modules/config.py'.
-echo ======================================================================
-echo.
-pause
-echo.
-
-REM --- 7. Run Application ---
+REM =======================================
+REM  6. Run Application
+REM =======================================
 :run_menu
-echo Choose how to run the application:
-echo 1. Run Main Process (main.py - for full video generation)
-echo 2. Run Interactive CLI (interactive_cli.py - for menu options)
-echo 3. Test AI Providers (test_openai.py)
+echo.
+echo --- Ready to Run ---
+echo 1. Run Main Process (generates a video from start to finish)
+echo 2. Run Interactive CLI (menu with more options)
+echo 3. Test AI Providers (checks if models load correctly)
 echo 4. Exit
 echo.
 choice /C 1234 /M "Enter your choice [1, 2, 3, 4]:"
@@ -204,8 +164,7 @@ if errorlevel 1 goto :run_main
 
 :run_main
 echo Running main.py...
-echo Example: python main.py --chapters_dir manga_chapters --output manga_recap.mp4 --temp temp_files
-echo You will be prompted for arguments if none are provided to main.py or use --help.
+echo To pass arguments, run from command line, e.g.: python main.py --chapters_dir manga --output video.mp4
 python main.py %*
 goto :run_complete
 
@@ -215,20 +174,21 @@ python interactive_cli.py
 goto :run_complete
 
 :run_test_ai
-echo Running test_openai.py (tests AI provider setup)...
+echo Running test_openai.py...
 python test_openai.py
 goto :run_complete
 
 :run_complete
 echo.
 echo Script finished.
+pause
 goto :eof
 
 :error_exit
 echo.
 echo **************************************************
 echo  An error occurred. Please check the messages above.
+echo  The script will now exit.
 echo **************************************************
+pause
 goto :eof
-
-endlocal
