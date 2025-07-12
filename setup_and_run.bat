@@ -24,16 +24,7 @@ if %errorlevel% neq 0 (
 echo   python found.
 echo.
 
-REM --- Helper Functions (for other commands like tesseract) ---
-:check_command
-    echo Checking for %~1...
-    where %~1 >nul 2>nul
-    if %errorlevel% neq 0 (
-        echo   %~1 not found. Please install it and add to PATH.
-        exit /b 1
-    )
-    echo   %~1 found.
-    exit /b 0
+REM --- (No more :check_command subroutine) ---
 
 REM --- 2. Create/Activate Virtual Environment ---
 if not exist "%VENV_NAME%\Scripts\activate.bat" (
@@ -83,8 +74,10 @@ echo Additional AI model dependencies installed successfully.
 echo.
 
 REM --- 4. Tesseract OCR (if not installed) ---
+echo Checking for tesseract...
 where tesseract >nul 2>nul
 if %errorlevel% neq 0 (
+    echo   tesseract not found.
     echo ======================================================================
     echo  WARNING: Tesseract OCR not found in PATH.
     echo ======================================================================
@@ -98,7 +91,7 @@ if %errorlevel% neq 0 (
     echo ======================================================================
     echo.
 ) else (
-    echo Tesseract OCR found.
+    echo   tesseract found.
 )
 echo.
 
