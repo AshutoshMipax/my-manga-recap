@@ -35,7 +35,7 @@ echo Current directory: %CD%
 PAUSE
 
 echo Checking if venv directory '%VENV_NAME%' exists...
-IF EXIST \"%VENV_NAME%\" (
+IF EXIST %VENV_NAME% (
     echo Venv directory '%VENV_NAME%' already exists.
 ) ELSE (
     echo Venv directory '%VENV_NAME%' does not exist. Will attempt to create.
@@ -43,7 +43,7 @@ IF EXIST \"%VENV_NAME%\" (
 PAUSE
 
 echo Attempting to create Python virtual environment: '%VENV_NAME%'
-python -m venv \"%VENV_NAME%\"
+python -m venv %VENV_NAME%
 IF %ERRORLEVEL% NEQ 0 (
     echo ERROR: Failed to create virtual environment using 'python -m venv %VENV_NAME%'.
     echo Possible issues:
@@ -57,8 +57,8 @@ IF %ERRORLEVEL% NEQ 0 (
 ECHO Virtual environment should now be created or was already present.
 PAUSE
 
-echo Checking for activate script: \"%VENV_NAME%\\Scripts\\activate.bat\"
-IF NOT EXIST \"%VENV_NAME%\\Scripts\\activate.bat\" (
+echo Checking for activate script: '%VENV_NAME%\\Scripts\\activate.bat'
+IF NOT EXIST %VENV_NAME%\\Scripts\\activate.bat (
     echo ERROR: Activate script not found at '%VENV_NAME%\\Scripts\\activate.bat' even after creation attempt.
     echo This indicates a problem with the venv creation process.
     PAUSE
@@ -68,7 +68,7 @@ ECHO Activate script found.
 PAUSE
 
 echo Attempting to activate virtual environment...
-CALL \"%VENV_NAME%\\Scripts\\activate.bat\"
+CALL %VENV_NAME%\\Scripts\\activate.bat
 IF %ERRORLEVEL% NEQ 0 (
     echo ERROR: Failed to activate virtual environment using CALL.
     echo The activate script might have issues or the path is incorrect.
