@@ -12,7 +12,19 @@ set PYTHON_VERSION=3.9
 set VENV_NAME=.venv
 set REQUIREMENTS_FILE=requirements.txt
 
-REM --- Helper Functions ---
+REM --- 1. Check for Python ---
+echo Checking for python...
+where python >nul 2>nul
+if %errorlevel% neq 0 (
+    echo   python not found. Please install it and add to PATH.
+    echo Python is required to run this application.
+    echo Please install Python %PYTHON_VERSION% or higher and ensure it's in your PATH.
+    goto :eof
+)
+echo   python found.
+echo.
+
+REM --- Helper Functions (for other commands like tesseract) ---
 :check_command
     echo Checking for %~1...
     where %~1 >nul 2>nul
@@ -22,15 +34,6 @@ REM --- Helper Functions ---
     )
     echo   %~1 found.
     exit /b 0
-
-REM --- 1. Check for Python ---
-call :check_command python
-if %errorlevel% neq 0 (
-    echo Python is required to run this application.
-    echo Please install Python %PYTHON_VERSION% or higher and ensure it's in your PATH.
-    goto :eof
-)
-echo.
 
 REM --- 2. Create/Activate Virtual Environment ---
 if not exist "%VENV_NAME%\Scripts\activate.bat" (
