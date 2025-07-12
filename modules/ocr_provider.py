@@ -318,13 +318,27 @@ class OCRManager:
         try:
             with Image.open(image_path) as img:
                 # Ensure image is in a compatible mode if necessary, e.g. RGB
-                if img.mode not in ['RGB', 'L']: # L for grayscale, common for Tesseract
+                if img.mode not in ['RGB', 'L']:
                     img = img.convert('RGB')
-            for provider in self.providers:
-                try:
-                    text = provider.extract_text(img)
-                    if text.strip():
-                        return text.strip()
-                except Exception as exc:
-                    print(f"⚠️  {provider.__class__.__name__} falhou: {exc}")
+
+                # This loop MUST be inside the 'with' block
+                for provider in self.providers:
+                    try:
+                        print(f"Attempting OCR with {provider.__class__.__name__}...")
+                        text = provider.extract_text(img)
+                        if text and text.strip() and not text.startswith("["):
+                            print(f"✅ Success with {provider.__class__.__name__}.")
+                            return text.strip()
+                        else:
+                            print(f"⚠️ {provider.__class__.__name__} returned empty or error-like text.")
+                    except Exception as exc:
+                        print(f"❌ {provider.__class__.__name__} failed: {exc}")
+
+        except FileNotFoundError:
+            print(f"❌ OCR Error: File not found at {image_path}")
+            return f"[Erro: Arquivo não encontrado - {os.path.basename(image_path)}]"
+        except Exception as exc:
+            print(f"❌ OCR Error: Could not process image {image_path}. Reason: {exc}")
+            return f"[Erro ao processar imagem: {exc}]"
+
         return "[Página vazia]"
