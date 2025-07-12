@@ -28,12 +28,23 @@ def print_info(message):
     """Prints an informational message."""
     print(f"\n[INFO] {message}")
 
+def is_in_venv():
+    """Checks if the script is running in a virtual environment."""
+    return hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
+
 def get_executable(name):
-    """Cross-platform way to get the path to an executable in the venv."""
-    if sys.platform == "win32":
-        return os.path.join(VENV_NAME, "Scripts", name)
+    """Gets the correct path for an executable (pip, python) depending on venv activation."""
+    if is_in_venv():
+        # We are in a venv, use the specific path
+        if sys.platform == "win32":
+            return os.path.join(sys.prefix, "Scripts", name)
+        else:
+            return os.path.join(sys.prefix, "bin", name)
     else:
-        return os.path.join(VENV_NAME, "bin", name)
+        # Not in a venv, use the base command name.
+        # The system's PATH will resolve it to the global python/pip.
+        # On Windows, this might be just 'python' or 'python.exe', so we return the base name.
+        return name
 
 def run_command(command, description):
     """Runs a command and handles errors."""
