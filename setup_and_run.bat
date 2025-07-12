@@ -27,25 +27,57 @@ echo.
 REM --- (No more :check_command subroutine) ---
 
 REM --- 2. Create/Activate Virtual Environment ---
-if not exist "%VENV_NAME%\Scripts\activate.bat" (
-    echo Creating Python virtual environment (%VENV_NAME%)...
-    python -m venv %VENV_NAME%
-    if %errorlevel% neq 0 (
-        echo Failed to create virtual environment. Please check your Python installation.
-        goto :eof
-    )
-    echo Virtual environment created.
-) else (
-    echo Virtual environment (%VENV_NAME%) already exists.
-)
-
-echo Activating virtual environment...
-call "%VENV_NAME%\Scripts\activate.bat"
-if %errorlevel% neq 0 (
-    echo Failed to activate virtual environment.
-    goto :eof
-)
 echo.
+echo --- Stage: Virtual Environment Setup ---
+PAUSE
+
+echo Current directory: %CD%
+PAUSE
+
+echo Checking if venv directory '%VENV_NAME%' exists...
+IF EXIST \"%VENV_NAME%\" (
+    echo Venv directory '%VENV_NAME%' already exists.
+) ELSE (
+    echo Venv directory '%VENV_NAME%' does not exist. Will attempt to create.
+)
+PAUSE
+
+echo Attempting to create Python virtual environment: '%VENV_NAME%'
+python -m venv \"%VENV_NAME%\"
+IF %ERRORLEVEL% NEQ 0 (
+    echo ERROR: Failed to create virtual environment using 'python -m venv %VENV_NAME%'.
+    echo Possible issues:
+    echo   - Python's venv module is missing or corrupted.
+    echo   - Permissions issue in the current directory (%CD%).
+    echo   - Insufficient disk space.
+    echo Please check your Python installation and directory permissions.
+    PAUSE
+    GOTO :error_exit
+)
+ECHO Virtual environment should now be created or was already present.
+PAUSE
+
+echo Checking for activate script: \"%VENV_NAME%\\Scripts\\activate.bat\"
+IF NOT EXIST \"%VENV_NAME%\\Scripts\\activate.bat\" (
+    echo ERROR: Activate script not found at '%VENV_NAME%\\Scripts\\activate.bat' even after creation attempt.
+    echo This indicates a problem with the venv creation process.
+    PAUSE
+    GOTO :error_exit
+)
+ECHO Activate script found.
+PAUSE
+
+echo Attempting to activate virtual environment...
+CALL \"%VENV_NAME%\\Scripts\\activate.bat\"
+IF %ERRORLEVEL% NEQ 0 (
+    echo ERROR: Failed to activate virtual environment using CALL.
+    echo The activate script might have issues or the path is incorrect.
+    PAUSE
+    GOTO :error_exit
+)
+ECHO Virtual environment activated.
+echo.
+PAUSE
 
 REM --- 3. Install Dependencies ---
 echo Installing dependencies from %REQUIREMENTS_FILE%...
