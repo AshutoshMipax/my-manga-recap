@@ -1,14 +1,9 @@
 pytesseract
 Pillow
 transformers
-torch
+torch --index-url https://download.pytorch.org/whl/cpu
 moviepy
 pyttsx3
 python-dotenv
 numpy
-
-requests
-beautifulsoup4
-selenium
-webdriver-manager
-openai
+gradio

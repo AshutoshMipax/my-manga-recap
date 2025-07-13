@@ -81,8 +81,10 @@ def parse_args():
     return parser.parse_args()
 
 
-def main() -> None:
-    args = parse_args()
+def main(args=None) -> None:
+    if args is None:
+        args = parse_args()
+
     os.makedirs(args.temp, exist_ok=True)
     
     # Warn about deprecated arguments
@@ -217,7 +219,6 @@ def main() -> None:
     print(f"\n💡 Dicas:")
     print(f"   • Use --force para recomeçar do zero")
     print(f"   • Configure OPENAI_API_KEY para qualidade premium")
-    print(f"   • Execute 'python test_openai.py' para testar providers")
 
 
 if __name__ == "__main__":
